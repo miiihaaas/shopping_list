@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Korisnici - Shopping Lista{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h2>Upravljanje korisnicima</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4 class="card-title">Dodeli workspace korisniku</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('admin.users') }}">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        <label for="{{ form.user_id.id }}" class="form-label">Korisnik</label>
+                        {{ form.user_id(class="form-control" + (" is-invalid" if form.user_id.errors else "")) }}
+                        {% for error in form.user_id.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.workspace_id.id }}" class="form-label">Workspace</label>
+                        {{ form.workspace_id(class="form-control" + (" is-invalid" if form.workspace_id.errors else "")) }}
+                        {% for error in form.workspace_id.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="d-grid gap-2">
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">Korisnici sistema</h4>
+            </div>
+            <div class="card-body">
+                {% if users %}
+                <div class="list-group list-group-flush">
+                    {% for user in users %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-1">{{ user.username }} 
+                                    {% if user.is_admin %}
+                                    <span class="badge bg-danger">Admin</span>
+                                    {% endif %}
+                                </h5>
+                                <small class="text-muted">Email: {{ user.email }}</small><br>
+                                <small class="text-muted">Workspace: 
+                                    {% if user.workspace %}
+                                    {{ user.workspace.name }}
+                                    {% else %}
+                                    <span class="text-danger">Nije dodeljen</span>
+                                    {% endif %}
+                                </small>
+                            </div>
+                            <div>
+                                {% if current_user.id != user.id %}
+                                <form method="POST" action="{{ url_for('admin.toggle_admin', user_id=user.id) }}" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                    <button type="submit" class="btn btn-secondary btn-sm">
+                                        {% if user.is_admin %}
+                                        Ukloni admin
+                                        {% else %}
+                                        Postavi za admina
+                                        {% endif %}
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">Nema registrovanih korisnika.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

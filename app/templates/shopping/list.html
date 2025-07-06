@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Lista za kupovinu - Shopping Lista{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>Lista za kupovinu</h2>
+        {% if current_user.workspace %}
+        <p class="text-muted">Workspace: {{ current_user.workspace.name }}</p>
+        {% endif %}
+    </div>
+</div>
+
+{% if not current_user.workspace_id %}
+<div class="alert alert-warning">
+    Nemate dodeljen workspace. Obratite se administratoru.
+</div>
+{% else %}
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">Dodaj stavku</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('shopping.list') }}">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        <label for="{{ form.name.id }}" class="form-label">Naziv stavke</label>
+                        {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else ""), placeholder="npr. Mleko, Hleb...") }}
+                        {% for error in form.name.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="d-grid gap-2">
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">Stavke za kupovinu</h4>
+            </div>
+            <div class="card-body">
+                {% if items %}
+                <ul class="list-group list-group-flush">
+                    {% for item in items %}
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <form method="POST" action="{{ url_for('shopping.toggle', item_id=item.id) }}" class="me-3">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                    <button type="submit" class="btn btn-sm {% if item.purchased %}btn-success{% else %}btn-outline-success{% endif %}" title="{% if item.purchased %}Označeno{% else %}Označi kao kupljeno{% endif %}">
+                                        <i class="bi bi-check"></i>
+                                    </button>
+                                </form>
+                                <div>
+                                    <span class="{% if item.purchased %}text-decoration-line-through{% endif %}">{{ item.name }}</span>
+                                    <br>
+                                    <small class="text-muted">
+                                        Dodao: {{ item.added_by_user.username }} | {{ item.created_at.strftime('%d.%m.%Y %H:%M') }}
+                                    </small>
+                                </div>
+                            </div>
+                            <div>
+                                <a href="{{ url_for('shopping.edit', item_id=item.id) }}" class="btn btn-sm btn-outline-primary me-1">Izmeni</a>
+                                <form method="POST" action="{{ url_for('shopping.delete', item_id=item.id) }}" class="d-inline" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovu stavku?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Obriši</button>
+                                </form>
+                            </div>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted text-center py-3">Nema stavki za kupovinu. Dodajte novu stavku.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
